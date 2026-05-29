@@ -26,6 +26,8 @@ export class VaultScene {
         this.app.stage.addChild(this.container);
         this.setupScene();
         this.resize();
+        (window as any).doorGroup = this.doorGroup;
+        (window as any).vaultScene = this;
     }
 
     private doorGroup!: PIXI.Container;
@@ -61,12 +63,13 @@ export class VaultScene {
         this.doorGroup.addChild(this.handle);
 
 
-        this.doorGroup.scale.set(0.72);
-        this.doorGroup.y = 8;
+        this.doorGroup.scale.set(1.078);
+        this.doorGroup.x = 45.2;
+        this.doorGroup.y = -68.6;
 
-        this.timerText = new PIXI.Text('0.00s', {
+        this.timerText = new PIXI.Text('0.00', {
             fontFamily: 'monospace',
-            fontSize: 48,
+            fontSize: 24,
             fill: 0x00ff00,
             dropShadow: true,
             dropShadowColor: '#00ff00',

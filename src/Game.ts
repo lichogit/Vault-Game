@@ -82,7 +82,7 @@ export class Game {
         this.logic.generateCode();
         this.isPlaying = true;
         this.timerStarted = false;
-        this.scene.setTimerText('0.00s');
+        this.scene.setTimerText('0.00');
         this.stopTimer();
     }
 
@@ -93,7 +93,7 @@ export class Game {
         const updateTimer = () => {
             if (!this.isPlaying) return;
             const elapsed = (performance.now() - this.startTime) / 1000;
-            this.scene.setTimerText(elapsed.toFixed(2) + 's');
+            this.scene.setTimerText(elapsed.toFixed(2));
             this.animationFrameId = requestAnimationFrame(updateTimer);
         };
         this.animationFrameId = requestAnimationFrame(updateTimer);
