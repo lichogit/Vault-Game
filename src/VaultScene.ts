@@ -5,7 +5,7 @@ import { Direction } from './VaultLogic';
 export class VaultScene {
     private app: PIXI.Application;
     private container: PIXI.Container;
-    
+
     private bg!: PIXI.Sprite;
     private doorOpen!: PIXI.Sprite;
     private doorClosed!: PIXI.Sprite;
@@ -13,7 +13,7 @@ export class VaultScene {
     private handle!: PIXI.Sprite;
     private shine!: PIXI.Sprite;
     private timerText!: PIXI.Text;
-    
+
     private leftHitArea!: PIXI.Graphics;
     private rightHitArea!: PIXI.Graphics;
 
@@ -28,7 +28,11 @@ export class VaultScene {
         this.resize();
     }
 
+    private doorGroup!: PIXI.Container;
+
     private setupScene() {
+        this.doorGroup = new PIXI.Container();
+
         this.bg = PIXI.Sprite.from('background');
         this.bg.anchor.set(0.5);
 
@@ -41,7 +45,7 @@ export class VaultScene {
 
         this.handleShadow = PIXI.Sprite.from('doorHandleShadow');
         this.handleShadow.anchor.set(0.5);
-        
+
         this.handle = PIXI.Sprite.from('doorHandle');
         this.handle.anchor.set(0.5);
 
@@ -49,6 +53,16 @@ export class VaultScene {
         this.shine.anchor.set(0.5);
         this.shine.visible = false;
         this.shine.blendMode = PIXI.BLEND_MODES.ADD;
+
+        this.doorGroup.addChild(this.doorOpen);
+        this.doorGroup.addChild(this.shine);
+        this.doorGroup.addChild(this.doorClosed);
+        this.doorGroup.addChild(this.handleShadow);
+        this.doorGroup.addChild(this.handle);
+
+
+        this.doorGroup.scale.set(0.72);
+        this.doorGroup.y = 8;
 
         this.timerText = new PIXI.Text('0.00s', {
             fontFamily: 'monospace',
@@ -62,14 +76,9 @@ export class VaultScene {
         this.timerText.anchor.set(0.5);
 
         this.container.addChild(this.bg);
+        this.container.addChild(this.doorGroup);
         this.container.addChild(this.timerText);
-        this.container.addChild(this.doorOpen);
-        this.container.addChild(this.shine);
-        this.container.addChild(this.doorClosed);
-        
-        this.container.addChild(this.handleShadow);
-        this.container.addChild(this.handle);
-        
+
         this.leftHitArea = new PIXI.Graphics();
         this.leftHitArea.beginFill(0xff0000, 0.001);
         this.leftHitArea.drawRect(0, 0, 100, 100);
@@ -92,24 +101,19 @@ export class VaultScene {
 
     public resize() {
         const { width, height } = this.app.screen;
-        
+
         this.container.x = width / 2;
         this.container.y = height / 2;
-        
-        const coverScale = Math.max(width / this.bg.texture.width, height / this.bg.texture.height);
-        this.bg.scale.set(coverScale);
-        
-        const elementScale = Math.min(width / 1920, height / 1080) * 1.5;
-        this.doorClosed.scale.set(elementScale);
-        this.doorOpen.scale.set(elementScale);
-        this.handle.scale.set(elementScale);
-        this.handleShadow.scale.set(elementScale);
-        this.shine.scale.set(elementScale);
 
-        // Approximate keypad position based on standard UI layouts for vaults:
-        this.timerText.x = -this.bg.texture.width * coverScale * 0.25; 
-        this.timerText.y = -50 * elementScale;
-        
+
+        const scale = Math.max(width / 2400, height / 1108);
+        this.container.scale.set(scale);
+
+
+        this.timerText.x = -2400 * 0.19;
+        this.timerText.y = -1108 * 0.04;
+
+
         this.leftHitArea.width = width / 2;
         this.leftHitArea.height = height;
         this.leftHitArea.x = 0;
@@ -150,7 +154,7 @@ export class VaultScene {
 
     public async playErrorAnimation() {
         this.isAnimating = true;
-        
+
         return new Promise<void>((resolve) => {
             gsap.to([this.handle, this.handleShadow], {
                 rotation: "+=" + (Math.PI * 6),
@@ -166,34 +170,39 @@ export class VaultScene {
 
     public async playSuccessAnimation() {
         this.isAnimating = true;
-        
+
         return new Promise<void>((resolve) => {
             this.doorOpen.visible = true;
             this.doorOpen.alpha = 0;
-            
+
             const tl = gsap.timeline({
                 onComplete: () => {
                     this.playShineAnimation();
                     resolve();
                 }
             });
-            
+
             tl.to(this.doorOpen, { alpha: 1, duration: 0.5 }, 0);
-            
+
+            // Slide elements relative to their container
+            const slideDistance = this.doorClosed.texture.width * 1.0;
+
             tl.to([this.doorClosed, this.handle, this.handleShadow], {
-                x: "-=800",
+                x: `-=${slideDistance}`,
                 alpha: 0,
                 duration: 1.5,
                 ease: "power2.inOut"
             }, 0);
         });
     }
-    
+
     private playShineAnimation() {
         this.shine.visible = true;
         this.shine.alpha = 0;
         this.shine.rotation = 0;
-        this.shine.scale.set(this.doorClosed.scale.x * 0.8);
+
+
+        this.shine.scale.set(0.8);
 
         gsap.to(this.shine, {
             rotation: Math.PI * 2,
@@ -201,7 +210,7 @@ export class VaultScene {
             repeat: -1,
             ease: "none"
         });
-        
+
         gsap.to(this.shine, {
             alpha: 1,
             duration: 0.5,
@@ -223,7 +232,7 @@ export class VaultScene {
                     resolve();
                 }
             });
-            
+
             tl.to([this.doorClosed, this.handle, this.handleShadow], {
                 x: 0,
                 alpha: 1,

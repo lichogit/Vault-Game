@@ -10,6 +10,7 @@ export class Game {
 
     private startTime: number = 0;
     private isPlaying: boolean = false;
+    private timerStarted: boolean = false;
     private animationFrameId: number | null = null;
 
     public async init() {
@@ -27,6 +28,11 @@ export class Game {
         this.scene.onInteraction = async (dir) => {
             if (!this.isPlaying || this.scene.isAnimating) return;
             
+            if (!this.timerStarted) {
+                this.startTimer();
+                this.timerStarted = true;
+            }
+
             await this.scene.rotateHandle(dir);
             
             const result = this.logic.handleInput(dir);
@@ -74,8 +80,10 @@ export class Game {
 
     private resetGame() {
         this.logic.generateCode();
-        this.startTimer();
         this.isPlaying = true;
+        this.timerStarted = false;
+        this.scene.setTimerText('0.00s');
+        this.stopTimer();
     }
 
     private startTimer() {
