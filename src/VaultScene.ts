@@ -31,6 +31,7 @@ export class VaultScene {
     }
 
     private doorGroup!: PIXI.Container;
+    private doorPanel!: PIXI.Container;
 
     private setupScene() {
         this.doorGroup = new PIXI.Container();
@@ -39,7 +40,7 @@ export class VaultScene {
         this.bg.anchor.set(0.5);
 
         this.doorOpen = PIXI.Sprite.from('doorOpen');
-        this.doorOpen.anchor.set(0.5);
+        this.doorOpen.anchor.set(0.5, 0.5);
         this.doorOpen.visible = false;
 
         this.doorClosed = PIXI.Sprite.from('doorClosed');
@@ -56,16 +57,34 @@ export class VaultScene {
         this.shine.visible = false;
         this.shine.blendMode = PIXI.BLEND_MODES.ADD;
 
+
+        this.doorPanel = new PIXI.Container();
+        this.doorPanel.addChild(this.doorClosed);
+        this.doorPanel.addChild(this.handleShadow);
+        this.doorPanel.addChild(this.handle);
+
+        // Set pivot to the right edge of the door (the hinge point)
+        const halfDoorW = this.doorClosed.texture.width / 2;
+        this.doorPanel.pivot.x = halfDoorW;
+        this.doorPanel.x = halfDoorW; // compensate so it renders in the same position
+
+
+        this.doorOpen.x = halfDoorW + this.doorOpen.texture.width / 2 - 160;
+        this.doorOpen.y = 0;
+
         this.doorGroup.addChild(this.doorOpen);
         this.doorGroup.addChild(this.shine);
-        this.doorGroup.addChild(this.doorClosed);
-        this.doorGroup.addChild(this.handleShadow);
-        this.doorGroup.addChild(this.handle);
+        this.doorGroup.addChild(this.doorPanel);
+
+        this.doorGroup.scale.set(1.145);
+        this.doorGroup.x = 70.8;
+        this.doorGroup.y = -90.1;
 
 
-        this.doorGroup.scale.set(1.078);
-        this.doorGroup.x = 45.2;
-        this.doorGroup.y = -68.6;
+        this.handle.x = -20;
+        this.handle.y = 0;
+        this.handleShadow.x = -20;
+        this.handleShadow.y = 0;
 
         this.timerText = new PIXI.Text('0.00', {
             fontFamily: 'monospace',
@@ -113,8 +132,8 @@ export class VaultScene {
         this.container.scale.set(scale);
 
 
-        this.timerText.x = -2400 * 0.19;
-        this.timerText.y = -1108 * 0.04;
+        this.timerText.x = -456;
+        this.timerText.y = -70;
 
 
         this.leftHitArea.width = width / 2;
@@ -173,8 +192,10 @@ export class VaultScene {
 
     public async playSuccessAnimation() {
         this.isAnimating = true;
+        const halfDoorW = this.doorClosed.texture.width / 2;
 
         return new Promise<void>((resolve) => {
+            // Prepare the side-view door sprite (starts invisible)
             this.doorOpen.visible = true;
             this.doorOpen.alpha = 0;
 
@@ -185,17 +206,26 @@ export class VaultScene {
                 }
             });
 
-            tl.to(this.doorOpen, { alpha: 1, duration: 0.5 }, 0);
-
-            // Slide elements relative to their container
-            const slideDistance = this.doorClosed.texture.width * 1.0;
-
-            tl.to([this.doorClosed, this.handle, this.handleShadow], {
-                x: `-=${slideDistance}`,
-                alpha: 0,
-                duration: 1.5,
-                ease: "power2.inOut"
+            //  Swing the closed-door panel: compress scaleX toward the right-edge pivot
+            tl.to(this.doorPanel.scale, {
+                x: 0,
+                duration: 1.2,
+                ease: "power3.inOut"
             }, 0);
+
+            // Shift the hinge point rightward as the door swings out
+            tl.to(this.doorPanel, {
+                x: halfDoorW + 20,
+                duration: 1.2,
+                ease: "power3.inOut"
+            }, 0);
+
+            // hide the flat panel, reveal the pre-rendered side-view
+            tl.to(this.doorOpen, {
+                alpha: 1,
+                duration: 0.6,
+                ease: "power1.in"
+            }, 0.6);
         });
     }
 
@@ -224,6 +254,8 @@ export class VaultScene {
     }
 
     public async closeVault() {
+        const halfDoorW = this.doorClosed.texture.width / 2;
+
         return new Promise<void>((resolve) => {
             gsap.killTweensOf(this.shine);
             this.shine.visible = false;
@@ -236,12 +268,26 @@ export class VaultScene {
                 }
             });
 
-            tl.to([this.doorClosed, this.handle, this.handleShadow], {
-                x: 0,
-                alpha: 1,
-                duration: 1.5,
-                ease: "power2.inOut"
+            //  Fade out the side-view door sprite
+            tl.to(this.doorOpen, {
+                alpha: 0,
+                duration: 0.5,
+                ease: "power1.out"
             }, 0);
+
+            //  Swing the panel closed — restore scaleX from 0 to 1
+            tl.to(this.doorPanel.scale, {
+                x: 1,
+                duration: 1.2,
+                ease: "power3.inOut"
+            }, 0.3);
+
+            // Move panel back to its neutral position
+            tl.to(this.doorPanel, {
+                x: halfDoorW,
+                duration: 1.2,
+                ease: "power3.inOut"
+            }, 0.3);
         });
     }
 }

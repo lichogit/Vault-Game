@@ -14,11 +14,13 @@ export class Game {
     private animationFrameId: number | null = null;
 
     public async init() {
+        const container = document.getElementById('game-container')!;
+
         this.app = new PIXI.Application<HTMLCanvasElement>({
-            resizeTo: window,
+            resizeTo: container,
             backgroundColor: 0x000000,
         });
-        document.getElementById('game-container')?.appendChild(this.app.view as HTMLCanvasElement);
+        container.appendChild(this.app.view as HTMLCanvasElement);
 
         await this.loadAssets();
 
@@ -57,7 +59,10 @@ export class Game {
 
         this.resetGame();
         
-        window.addEventListener('resize', () => this.scene.resize());
+        window.addEventListener('resize', () => {
+            this.app.resize();
+            this.scene.resize();
+        });
     }
 
     private async loadAssets() {
