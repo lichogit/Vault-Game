@@ -63,7 +63,7 @@ export class VaultScene {
         this.doorPanel.addChild(this.handleShadow);
         this.doorPanel.addChild(this.handle);
 
-        // Set pivot to the right edge of the door (the hinge point)
+        // Set pivot to the right edge of the door 
         const halfDoorW = this.doorClosed.texture.width / 2;
         this.doorPanel.pivot.x = halfDoorW;
         this.doorPanel.x = halfDoorW; // compensate so it renders in the same position
