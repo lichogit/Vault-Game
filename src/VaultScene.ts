@@ -97,7 +97,7 @@ export class VaultScene {
         });
         this.timerText.anchor.set(0.5);
 
-        this.app.stage.addChildAt(this.bg, 0);
+        this.container.addChild(this.bg);
         this.container.addChild(this.doorGroup);
         this.container.addChild(this.timerText);
 
@@ -124,17 +124,13 @@ export class VaultScene {
     public resize() {
         const { width, height } = this.app.screen;
 
-        // Background always fills the viewport 
-        const bgScale = Math.max(width / this.bg.texture.width, height / this.bg.texture.height);
-        this.bg.scale.set(bgScale);
-        this.bg.x = width / 2;
-        this.bg.y = height / 2;
-
-        // Game content scales uniformly to always fit within the viewport
-        const scale = Math.min(width / 2400, height / 1108);
         this.container.x = width / 2;
         this.container.y = height / 2;
+
+
+        const scale = Math.max(width / 2400, height / 1108);
         this.container.scale.set(scale);
+
 
         this.timerText.x = -456;
         this.timerText.y = -70;
